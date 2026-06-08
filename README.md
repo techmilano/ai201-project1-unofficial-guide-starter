@@ -9,31 +9,27 @@
 
 ## Domain
 
-<!-- What topic or category of knowledge does your system cover?
-     Why is this knowledge valuable, and why is it hard to find through official channels?
-     Example: "Student reviews of CS professors at [university] — useful because official
-     course descriptions don't reflect teaching style, exam difficulty, or workload." -->
+The domain selected is the **UCF Student Housing & Campus Survival Guide**. It focuses on navigating the complexities of housing eligibility, application timelines, residence hall regulations, dining memberships, and campus parking/transportation at the University of Central Florida.
+
+This knowledge is highly valuable yet notoriously difficult to find because official university policy facts are fragmented across various departmental web pages, complex housing agreements, and lengthy legal PDF handbooks. Conversely, student perspectives are scattered across unverified, unstructured Reddit threads. This system bridges that gap by centralizing official rules alongside real-world student context while maintaining strict programmatic grounding to separate legal facts from casual observations.
 
 ---
 
 ## Document Sources
 
-<!-- List every source you collected documents from.
-     Be specific: include URLs, subreddit names, forum thread titles, or file names.
-     Aim for variety — sources that together cover different subtopics or perspectives. -->
-
 | # | Source | Type | URL or file path |
 |---|--------|------|-----------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+| 1 | UCF Housing — Community Living Guide (landing page) | Official UCF page | https://www.housing.ucf.edu/community-living-guide/ |
+| 2 | UCF Community Living Guide — full handbook (CLG-4_16_26, April 2026 rev.) | Official UCF PDF | https://www.housing.ucf.edu/wp-content/uploads/sites/97/2026/04/CLG-4_16_26.pdf |
+| 3 | UCF Housing Options (agreement types & communities) | Official UCF page | https://www.housing.ucf.edu/housing-options/ |
+| 4 | UCF Housing Eligibility (by student classification) | Official UCF page | https://www.housing.ucf.edu/apply/ |
+| 5 | UCF Housing — How to Apply (steps & timelines) | Official UCF page | https://www.housing.ucf.edu/apply/howto/ |
+| 6 | UCF Housing — Safety (locking rules, hurricane prep) | Official UCF page | https://www.housing.ucf.edu/safety/ |
+| 7 | UCF Open Housing Options (cross-sex matching rules) | Official UCF page | https://www.housing.ucf.edu/question/open-housing-options/ |
+| 8 | UCF Dining Options FAQ (+ meal membership terms) | Official UCF page | https://www.ucf.edu/admissions/undergraduate/question/what-are-my-dining-options/ |
+| 9 | UCF Downtown Transportation & Parking | Official UCF page | https://www.ucf.edu/downtown/transportation/ |
+| 10 | UCF Housing Terms & Conditions 2025–2026 (binding agreement) | Official UCF PDF | https://www.housing.ucf.edu/wp-content/uploads/sites/97/2025/09/Housing-terms-and-conditions-2025-2026-FE_Revised-3-4-25-UPDATED.pdf |
+| 11 | UCF Golden Rule Student Handbook 2025–2026 | Official UCF PDF | https://scai.sswb.ucf.edu/wp-content/uploads/sites/52/2025/07/Golden-Rule-Student-Handbook-25-26.pdf |
 
 ---
 

@@ -1,0 +1,19 @@
+SOURCE: UCF Housing — Community Living Guide (landing page)
+URL: https://www.housing.ucf.edu/community-living-guide/
+TYPE: Official UCF page
+CATEGORY: policy / official
+RETRIEVED: 2026-06-07
+---
+
+Community Living Guide
+
+Living in a UCF residence hall or apartment gives you the opportunity to get involved in a community and enjoy many exciting experiences. The on-campus community helps you form lifelong friendships and lasting memories.
+
+The Housing and Residence Life staff is here to assist you, but we recommend that you take the lead by participating, listening to others, sharing your experiences and knowledge, adhering to the community's expectations, and being a role model for others.
+
+Learn more about how you can make the most of your on-campus living experience by reading the Community Living Guide.
+
+The full Community Living Guide (CLG) is published as a PDF and is updated periodically. The current edition referenced from this page is CLG-4_16_26.pdf (April 16, 2026 revision):
+https://www.housing.ucf.edu/wp-content/uploads/sites/97/2026/04/CLG-4_16_26.pdf
+
+NOTE: The detailed rules, expectations, and behaviors that all residents must follow live in the CLG PDF itself (saved separately in this corpus as 02_community_living_guide_full.txt).
