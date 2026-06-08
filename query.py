@@ -76,27 +76,59 @@ def _build_user_prompt(question: str, hits: list[dict]) -> str:
     )
 
 
-def _dedupe_sources(hits: list[dict]) -> list[str]:
-    seen: set[str] = set()
-    ordered: list[str] = []
+def _collect_sources(hits: list[dict]) -> list[dict]:
+    """Group retrieved hits by filename, preserving retrieval order.
+
+    Returns ``[{"source_file": str, "chunk_indexes": [int, ...]}, ...]`` with
+    one entry per distinct ``source_file``. Chunk indexes are ordered by the
+    rank at which they were retrieved.
+    """
+    order: list[str] = []
+    by_file: dict[str, list[int]] = {}
     for h in hits:
         f = h["source_file"]
-        if f not in seen:
-            seen.add(f)
-            ordered.append(f)
-    return ordered
+        if f not in by_file:
+            by_file[f] = []
+            order.append(f)
+        idx = int(h["chunk_index"])
+        if idx not in by_file[f]:
+            by_file[f].append(idx)
+    return [{"source_file": f, "chunk_indexes": by_file[f]} for f in order]
+
+
+def _format_sources_inline(sources: list[dict]) -> str:
+    """Render the structured sources list as an inline citation string."""
+    parts: list[str] = []
+    for s in sources:
+        idxs = s["chunk_indexes"]
+        if len(idxs) == 1:
+            parts.append(f"{s['source_file']} (chunk {idxs[0]})")
+        else:
+            parts.append(f"{s['source_file']} (chunks {', '.join(str(i) for i in idxs)})")
+    return "; ".join(parts)
+
+
+def _is_refusal(text: str) -> bool:
+    """Match the refusal sentence, tolerating trailing punctuation/whitespace."""
+    return text.strip().rstrip(".") == REFUSAL.rstrip(".")
 
 
 def ask(question: str, top_k: int = DEFAULT_TOP_K) -> dict:
-    """Return ``{"answer": str, "sources": list[str], "hits": list[dict]}``.
+    """Run retrieval + grounded generation.
 
-    ``answer`` already has the deduped source filenames appended (unless the
-    model refused). ``sources`` is the same list as a structured field for
-    the UI. ``hits`` is the raw retrieval result for debugging.
+    Returns a structured object:
+
+    .. code-block:: python
+
+        {
+            "answer": str,                # final answer (with citations appended unless refused)
+            "sources": list[dict],        # deduped per-file, with chunk_indexes
+            "retrieved_chunks": list[dict],  # raw top-k hits from retrieve()
+        }
     """
     hits = retrieve(question, top_k=top_k)
     if not hits:
-        return {"answer": REFUSAL, "sources": [], "hits": []}
+        return {"answer": REFUSAL, "sources": [], "retrieved_chunks": []}
 
     client = _get_client()
     response = client.chat.completions.create(
@@ -109,12 +141,16 @@ def ask(question: str, top_k: int = DEFAULT_TOP_K) -> dict:
     )
     raw_answer = response.choices[0].message.content.strip()
 
-    sources = _dedupe_sources(hits)
-    if raw_answer.strip().rstrip(".") == REFUSAL.rstrip("."):
-        return {"answer": REFUSAL, "sources": [], "hits": hits}
+    if _is_refusal(raw_answer):
+        return {"answer": REFUSAL, "sources": [], "retrieved_chunks": hits}
 
-    answer_with_citations = f"{raw_answer}\n\nSources: " + ", ".join(sources)
-    return {"answer": answer_with_citations, "sources": sources, "hits": hits}
+    sources = _collect_sources(hits)
+    answer_with_citations = f"{raw_answer}\n\nSources: {_format_sources_inline(sources)}"
+    return {
+        "answer": answer_with_citations,
+        "sources": sources,
+        "retrieved_chunks": hits,
+    }
 
 
 def main() -> int:

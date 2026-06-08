@@ -13,6 +13,8 @@ Run from the project root:
 
 from __future__ import annotations
 
+import os
+
 import gradio as gr
 
 from query import ask
@@ -26,15 +28,25 @@ EXAMPLES = [
 ]
 
 
+def _format_sources_md(sources: list[dict]) -> str:
+    if not sources:
+        return "_(no sources cited — the system refused for lack of grounded evidence)_"
+    lines = []
+    for s in sources:
+        idxs = s["chunk_indexes"]
+        idx_label = (
+            f"chunk {idxs[0]}" if len(idxs) == 1
+            else f"chunks {', '.join(str(i) for i in idxs)}"
+        )
+        lines.append(f"- `{s['source_file']}` ({idx_label})")
+    return "\n".join(lines)
+
+
 def answer_question(question: str) -> tuple[str, str]:
     if not question or not question.strip():
         return "Please enter a question.", ""
     result = ask(question.strip())
-    if result["sources"]:
-        sources_md = "\n".join(f"- `{s}`" for s in result["sources"])
-    else:
-        sources_md = "_(no sources retrieved)_"
-    return result["answer"], sources_md
+    return result["answer"], _format_sources_md(result["sources"])
 
 
 with gr.Blocks(title="UCF Unofficial Guide") as demo:
@@ -50,7 +62,7 @@ with gr.Blocks(title="UCF Unofficial Guide") as demo:
         lines=2,
     )
     submit = gr.Button("Ask", variant="primary")
-    answer = gr.Textbox(label="Answer", lines=10, show_copy_button=True)
+    answer = gr.Textbox(label="Answer", lines=10)
     gr.Markdown("### Sources")
     sources = gr.Markdown()
     gr.Examples(examples=EXAMPLES, inputs=question)
@@ -60,4 +72,7 @@ with gr.Blocks(title="UCF Unofficial Guide") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    # share=True creates a temporary *.gradio.live public URL (valid ~72h).
+    # Set GRADIO_SHARE=0 in the environment to disable for local-only runs.
+    share = os.environ.get("GRADIO_SHARE", "1") != "0"
+    demo.launch(share=share, server_name="0.0.0.0")
