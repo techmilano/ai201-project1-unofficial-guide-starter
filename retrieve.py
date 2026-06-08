@@ -82,19 +82,28 @@ def retrieve(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
 
 
 def main() -> int:
+    """Milestone 4 — print rank, distance, source_file, chunk_index, text per hit."""
     if len(sys.argv) < 2:
         print('Usage: python retrieve.py "your question"', file=sys.stderr)
         return 1
     query = " ".join(sys.argv[1:])
-    print(f"Query: {query}\n")
-    hits = retrieve(query)
+    print("=" * 64)
+    print(f"QUERY: {query}")
+    print(f"top_k: {DEFAULT_TOP_K}  collection: {COLLECTION_NAME}  model: {EMBED_MODEL}")
+    print("=" * 64)
+    hits = retrieve(query, top_k=DEFAULT_TOP_K)
     if not hits:
         print("(no hits)")
         return 0
-    for h in hits:
-        print(f"[{h['source_file']} #{h['chunk_index']}] distance={h['distance']:.4f}")
+    for rank, h in enumerate(hits, start=1):
+        print()
+        print(f"rank:         {rank}/{len(hits)}")
+        print(f"distance:     {h['distance']:.4f}")
+        print(f"source_file:  {h['source_file']}")
+        print(f"chunk_index:  {h['chunk_index']}")
+        print(f"text:")
         print(h["text"])
-        print("-" * 60)
+        print("-" * 64)
     return 0
 
 
