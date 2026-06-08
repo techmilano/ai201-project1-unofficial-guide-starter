@@ -9,7 +9,7 @@
 
 ## Domain
 
-The domain selected is the **University of Central Florida (UCF) Student Housing & Campus Survival Guide**. It focuses on navigating the complexities of housing eligibility, application timelines, residence hall regulations, dining memberships, and campus parking/transportation at the University of Central Florida.
+The domain selected is the **UCF Student Housing & Campus Survival Guide**. It focuses on navigating the complexities of housing eligibility, application timelines, residence hall regulations, dining memberships, and campus parking/transportation at the University of Central Florida.
 
 This knowledge is highly valuable yet notoriously difficult to find because official university policy facts are fragmented across various departmental web pages, complex housing agreements, and lengthy legal PDF handbooks. Conversely, student perspectives are scattered across unverified, unstructured Reddit threads. This system bridges that gap by centralizing official rules alongside real-world student context while maintaining strict programmatic grounding to separate legal facts from casual observations.
 
@@ -19,7 +19,7 @@ This knowledge is highly valuable yet notoriously difficult to find because offi
 
 I collected a UCF housing and campus survival corpus focused on official housing policy, residence life rules, dining, transportation, parking, and student conduct.
 
-Official collected sources in ./Documents folder:
+Official collected sources in "data/raw/ucf_housing" folder:
 1. `01_community_living_guide_page.txt` — UCF Housing: Community Living Guide landing page
 2. `02_community_living_guide_full.txt` — UCF Community Living Guide full text PDF (April 2026 Revision)
 3. `03_housing_options.txt` — UCF Housing Options (Agreement configurations)
@@ -81,13 +81,95 @@ The `all-MiniLM-L6-v2` model is ideal for prototyping because it runs entirely l
 
 ## AI Tool Plan
 
-> . For each pipeline stage where you'll use an AI tool, state: (a) which tool, (b) exactly what you'll give it as input — which sections of THIS planning.md and which requirements from the instructions, and (c) what you expect it to produce. Be specific. Example of the level of detail expected: "I'll prompt Claude with my Chunking Strategy section plus the file headers and ask it to implement chunk_text() at 600/120 that attaches source and category metadata to each chunk."
+For this project, I will use AI tools as implementation assistants, not as replacements for understanding the system. I will provide the AI tool with the relevant sections of this planning document, the project requirements, and my corpus structure. I will review, test, and revise all generated code before committing it. The tool will assist with the following technical stages:
 
-- **Ingestion & Chunking:**
-- **Embedding + Vector Store:**
-- **Retrieval:**
-- **Generation & Grounding:**
-- **Interface (Gradio):**
+### Ingestion & Chunking
+
+**Tool:** ChatGPT, Claude, or GitHub Copilot.
+
+**Input I will provide:**
+I will provide the AI tool with my Domain section, Documents section, Chunking Strategy section, and the Architecture diagram. I will also provide the project requirement that the pipeline must load raw documents, clean or preprocess them, and produce structured text ready for chunking.
+
+**Prompt I will use:**
+“Implement the ingestion and chunking stage for my RAG project. My corpus contains UCF housing and campus-survival `.txt` documents stored under `data/raw/ucf_housing`. Use my chunking strategy: 600-character chunks with 120-character overlap. Write Python code that loads all `.txt` files, removes empty lines and repeated whitespace, skips placeholder files that do not contain real source content, and creates chunk records with metadata including `source_file`, `chunk_index`, `source_type`, and `text`. Save the output as JSONL under `data/processed/chunks.jsonl`. Include a function called `chunk_text(text, chunk_size=600, overlap=120)` and a command-line entry point so I can run the script with `python ingest.py`.”
+
+**Expected output:**
+The AI should produce an `ingest.py` script that loads raw text files, cleans them, chunks them using the specified 600/120 strategy, attaches metadata, and writes a structured JSONL file.
+
+**How I will verify it:**
+I will run the script, check the total number of chunks, and print at least 5 random chunks. I will verify that chunks are readable, self-contained, not empty, not HTML artifacts, and not placeholder Reddit collection instructions.
+
+---
+
+### Embedding + Vector Store
+
+**Tool:** ChatGPT, Claude, or GitHub Copilot.
+
+**Input I will provide:**
+I will provide the Retrieval Approach section, the Architecture diagram, and the format of `data/processed/chunks.jsonl` created by the ingestion stage.
+
+**Prompt I will use:**
+“Implement the embedding and vector store stage for my RAG project. Use `sentence-transformers` with the model `all-MiniLM-L6-v2` and ChromaDB as a persistent local vector store. Read chunks from `data/processed/chunks.jsonl`, embed the `text` field, and store each chunk in ChromaDB with its metadata. Use a persistent directory such as `chroma_db`. Include stable chunk IDs based on the source filename and chunk index. Create a script named `embed.py` that can be run from the command line.”
+
+**Expected output:**
+The AI should produce an `embed.py` script that loads processed chunks, embeds them with `all-MiniLM-L6-v2`, stores them in ChromaDB, and preserves source metadata for later citations.
+
+**How I will verify it:**
+I will confirm that the ChromaDB collection is created, the number of stored vectors matches the number of chunks, and metadata such as source filename and chunk index is retrievable.
+
+---
+
+### Retrieval
+
+**Tool:** ChatGPT, Claude, or GitHub Copilot.
+
+**Input I will provide:**
+I will provide the Retrieval Approach section, the Evaluation Plan questions, and the expected ChromaDB collection structure.
+
+**Prompt I will use:**
+“Implement a retrieval function for my RAG project. It should accept a user query, embed the query using `all-MiniLM-L6-v2`, query the ChromaDB collection, and return the top 4 most relevant chunks with text, source filename, chunk index, and distance score. Create a script or module named `retrieve.py` with a function `retrieve(query: str, top_k: int = 4)`. Also include a small command-line test mode where I can run `python retrieve.py "What rules apply to overnight guests?"` and print the retrieved chunks and scores.”
+
+**Expected output:**
+The AI should produce a retrieval module that returns top-k chunks and metadata in a structured format usable by the generation stage.
+
+**How I will verify it:**
+I will test at least 3 evaluation questions before adding generation. I will inspect retrieved chunks manually and confirm that the top results are visibly relevant and have reasonable distance scores.
+
+---
+
+### Generation & Grounding
+
+**Tool:** ChatGPT, Claude, or GitHub Copilot.
+
+**Input I will provide:**
+I will provide the Retrieval Approach section, Evaluation Plan, Architecture diagram, and the project requirement that answers must be generated only from retrieved chunks and include source attribution.
+
+**Prompt I will use:**
+“Implement grounded response generation for my RAG project. Use Groq with `llama-3.3-70b-versatile`. The generation function should call my retrieval function first, then pass only the retrieved chunks as context to the LLM. The system prompt must instruct the model to answer only from the retrieved documents. If the retrieved chunks do not contain enough information, the model must say: ‘I do not have enough information in the provided sources to answer that.’ The response should include an answer and a source list. Do not allow the model to cite sources that were not retrieved.”
+
+**Expected output:**
+The AI should produce a module such as `query.py` with an `ask(question)` function that returns a grounded answer and source attribution.
+
+**How I will verify it:**
+I will test the system with covered questions and one out-of-scope question. A successful out-of-scope test should refuse to answer rather than hallucinate.
+
+---
+
+### Interface: Gradio
+
+**Tool:** ChatGPT, Claude, or GitHub Copilot.
+
+**Input I will provide:**
+I will provide the Architecture section, the expected `ask(question)` function signature, and the project requirement that the interface must be simple enough to demonstrate in a video.
+
+**Prompt I will use:**
+“Build a simple Gradio interface for my RAG project. The app should have one text input for the user question, a submit button, an answer box, and a sources box. It should call `ask(question)` from `query.py` and display the grounded answer plus retrieved source filenames. Keep the UI simple enough for a 3–5 minute project demo. Save this as `app.py` and include instructions for running it with `python app.py`.”
+
+**Expected output:**
+The AI should produce a working `app.py` Gradio interface connected to the RAG pipeline.
+
+**How I will verify it:**
+I will run the app locally, submit at least 3 test questions, confirm that answers and citations display correctly, and confirm that the interface can be demonstrated without extra explanation.
 
 ---
 
@@ -100,5 +182,5 @@ graph TD
     C -->|Vector Vectorization| D[ChromaDB Persistent Store]
     E[User Query via Interface] -->|Semantic Embedding Call| D
     D -->|Top-k=4 Vector Matching + Source Metadata| F(Groq Llama-3.3-70b Engine)
-	    F -->|Strict System Prompt Grounding Validation| G[Gradio Web UI: Grounded Answer + Citations]
+    F -->|Strict System Prompt Grounding Validation| G[Gradio Web UI: Grounded Answer + Citations]
 ```
